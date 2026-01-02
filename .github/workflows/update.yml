@@ -1,0 +1,37 @@
+name: Daily Deck Update
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-decks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m spacy download en_core_web_sm
+
+      - name: Run update script
+        run: |
+          python -m update_decks
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "deck-bot"
+          git config user.email "deck-bot@users.noreply.github.com"
+          git add .
+          git commit -m "Daily deck update"
+          git push origin main
