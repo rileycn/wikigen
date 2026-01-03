@@ -119,8 +119,8 @@ def generate_c_deck(approx_amt=500):
     print(f"{len(titles)} top wiki pages found")
     return titles_to_ids(titles)
 
-bdeck = generate_b_deck(100)
-cdeck = generate_c_deck(100)
+bdeck = generate_b_deck()
+cdeck = generate_c_deck()
 date = datetime.now(timezone.utc).strftime("%Y%m%d")
 
 with open("result.json", "w") as f:
