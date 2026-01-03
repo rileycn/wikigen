@@ -13,8 +13,8 @@ headers = {
 
 wiki_url = "https://en.wikipedia.org/w/api.php"
 
-reddit_cooldown = 0.5
-wiki_cooldown = 0.5
+reddit_cooldown = 1
+wiki_cooldown = 1
 
 
 def fetch_hot(subreddit, total):
@@ -28,15 +28,15 @@ def fetch_hot(subreddit, total):
         reddit_url = f"https://www.reddit.com/r/{subreddit}/hot.json"
         r = requests.get(reddit_url, headers=headers, params=params)
         if r.status_code != 200:
+            print("ERROR!")
+            print(r)
             break
         data = r.json()["data"]
         posts.extend(data["children"])
         after = data["after"]
-
         if not after:
             break
         time.sleep(reddit_cooldown)
-    
     return posts
 
 def titles_to_ids(titles):
@@ -58,6 +58,7 @@ def titles_to_ids(titles):
             break
         newdata = req.json()
         if "query" not in newdata:
+            print(newdata)
             break
         pages = newdata["query"]["pages"]
         finalset.update({page["title"]: page["pageid"] for page in pages.values() if "pageid" in page})
@@ -75,6 +76,7 @@ def generate_b_deck(approx_amt=1000,search_amt=400):
     posts.extend(fetch_hot("popculturechat", round_to_fifty(search_amt)))
     posts.extend(fetch_hot("all", round_to_fifty(search_amt)))
     titles = [p["data"]["title"] for p in posts]
+    print(f"{len(titles)} posts found")
     entities = dict()
     for title in titles:
         doc = nlp(title)
@@ -101,20 +103,24 @@ def generate_c_deck(approx_amt=500):
         if req.status_code != 200:
             break
         data = req.json()
-        banned = ["Special:", "Main Page", "Special:", "Wikipedia:", "List of", "Deaths in", "Portal"]
-        for vl in data["query"]["mostviewed"]:
-            preprocess = True
-            for b in banned:
-                if vl["title"].startswith(b):
-                    preprocess = False
-                    break
-            if preprocess:
-                titles.append(vl["title"])
+        if "query" in data:
+            banned = ["Special:", "Main Page", "Special:", "Wikipedia:", "List of", "Deaths in", "Portal"]
+            for vl in data["query"]["mostviewed"]:
+                preprocess = True
+                for b in banned:
+                    if vl["title"].startswith(b):
+                        preprocess = False
+                        break
+                if preprocess:
+                    titles.append(vl["title"])
+        else:
+            print(data)
         time.sleep(wiki_cooldown)
+    print(f"{len(titles)} top wiki pages found")
     return titles_to_ids(titles)
 
-bdeck = generate_b_deck()
-cdeck = generate_c_deck()
+bdeck = generate_b_deck(100)
+cdeck = generate_c_deck(100)
 date = datetime.now(timezone.utc).strftime("%Y%m%d")
 
 with open("result.json", "w") as f:
