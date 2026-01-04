@@ -123,9 +123,12 @@ bdeck = generate_b_deck()
 cdeck = generate_c_deck()
 date = datetime.now(timezone.utc).strftime("%Y%m%d")
 
-with open("result.json", "w") as f:
-    json.dump({"date": date, "b_deck": bdeck, "c_deck": cdeck}, f)
-    
-with open(f"archive/{date}.json", "w") as f:
-    json.dump({"date": date, "b_deck": bdeck, "c_deck": cdeck}, f)
+if len(bdeck) <= 0 or len(cdeck) <= 0:
+    print(f"ERROR: ONE DECK IS EMPTY B: {len(bdeck)} C: {len(cdeck)}")
+else:
+    with open("result.json", "w") as f:
+        json.dump({"date": date, "b_deck": bdeck, "c_deck": cdeck}, f)
+        
+    with open(f"archive/{date}.json", "w") as f:
+        json.dump({"date": date, "b_deck": bdeck, "c_deck": cdeck}, f)
 
