@@ -41,17 +41,16 @@ def fetch_hot(subreddit, total):
 
 def titles_to_ids(titles):
     finalset = {}
-    finallist = []
+    #finallist = []
     for i in range(int(len(titles) / 50) + 1):
         kys = titles[(i * 50):min((i + 1) * 50, len(titles))]
         newparams = {
             "action": "query",
             "titles": "|".join(kys),
             "redirects": 1,
-            "prop": "info|extracts",
-            "exintro": 1,
-            "explaintext": 1,
-            "format": "json"
+            "prop": "pageprops|redirects",
+            "format": "json",
+            "rdlimit": 5
         }
         req = requests.get(wiki_url, headers=headers, params=newparams)
         if req.status_code != 200:
@@ -61,13 +60,33 @@ def titles_to_ids(titles):
             print(newdata)
             break
         pages = newdata["query"]["pages"]
-        finalset.update({page["title"]: page["pageid"] for page in pages.values() if "pageid" in page})
-        finallist.extend([page["pageid"] for page in pages.values() if "pageid" in page])
+        newset = {}
+        for page in pages.values():
+            if "pageid" in page:
+                if "pageprops" in page and "disambiguation" in page["pageprops"]:
+                    validid = -1
+                    if "redirects" in page:
+                        for redir in page["redirects"]:
+                            if "pageid" in redir and "title" in redir:
+                                if "disambiguation" not in redir["title"]:
+                                    print("Disamb: " + page["title"] + " -> " + redir["title"])
+                                    validid = redir["pageid"]
+                                    break
+                    if validid >= 0:
+                        newset.update({page["title"]: validid})
+                else:
+                    newset.update({page["title"]: page["pageid"]})
+        finalset.update(newset)
+        #finallist.extend([page["pageid"] for page in pages.values() if "pageid" in page])
         time.sleep(wiki_cooldown)
-    
+    finallist = []
+    for tit in titles:
+        if tit in finalset:
+            finallist.append(finalset[tit])
     return finallist
 
 def round_to_fifty(num):
+
     return int(round(num / 50) * 50)
 
 def generate_b_deck(approx_amt=1000,search_amt=400):
