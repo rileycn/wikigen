@@ -8,7 +8,7 @@ nlp = spacy.load("en_core_web_sm")
 #need to do this command: python -m spacy download en_core_web_sm
 
 headers = {
-    "User-Agent": "wikigen by rileycn"
+    "User-Agent": "wikigen b by rileycn"
 }
 
 wiki_url = "https://en.wikipedia.org/w/api.php"
